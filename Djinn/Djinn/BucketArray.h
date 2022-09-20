@@ -69,22 +69,20 @@ private:
 template<typename T>
 struct sk::Formatter<BucketArray<T>>
 {
-	static void format(const BucketArray<T>& obj, std::string_view fmt, sk::Writer& writer)
+	static void format(const BucketArray<T>& arr, std::string_view fmt, Writer& writer)
 	{
-		auto format = Format::from(fmt);
-
 		writer.write("{ ");
 
 		size_t i = 0;
-		for (T* bucket : obj.buckets)
+		for (T* bucket : arr.buckets)
 		{
-			for (size_t bi = 0; i < obj.bucket_size && i < obj.size(); bi++, i++)
+			for (size_t bi = 0; i < arr.bucket_size && i < arr.size(); bi++, i++)
 			{
 				T& item = bucket[bi];
 				writer.print("{} ", item);
 			}
 		}
-	
+
 		writer.write('}');
 	}
 };

@@ -13,21 +13,42 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\utf8">
+      <UniqueIdentifier>{63fb53a3-0190-446f-bb37-d3ea0190a65b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\skrive">
+      <UniqueIdentifier>{ae91f7ce-32b7-4a92-bccc-fd52bc76a3bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\skrive">
+      <UniqueIdentifier>{79e6d132-ef8d-4474-99dc-ee8e9ddf2d7c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="skrive\formatter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="skrive\writer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Scope.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Error.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CodeLocation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="skrive\skrive\formatter.cpp">
+      <Filter>Source Files\skrive</Filter>
+    </ClCompile>
+    <ClCompile Include="skrive\skrive\writer.cpp">
+      <Filter>Source Files\skrive</Filter>
+    </ClCompile>
+    <ClCompile Include="skrive\skrive\skrive.cpp">
+      <Filter>Source Files\skrive</Filter>
+    </ClCompile>
+    <ClCompile Include="Interpreter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,23 +59,47 @@
     <ClInclude Include="BucketArray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="skrive.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="skrive\formatter-hk.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="skrive\formatter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="skrive\writer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Scope.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Error.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utf8.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utf8\unchecked.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utf8\checked.h">
+      <Filter>Header Files\utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="utf8\core.h">
+      <Filter>Header Files\utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="utf8\cpp11.h">
+      <Filter>Header Files\utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="utf8\cpp17.h">
+      <Filter>Header Files\utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="CodeLocation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="skrive\skrive.h">
+      <Filter>Header Files\skrive</Filter>
+    </ClInclude>
+    <ClInclude Include="skrive\skrive\formatter.h">
+      <Filter>Header Files\skrive</Filter>
+    </ClInclude>
+    <ClInclude Include="skrive\skrive\formatter-hk.h">
+      <Filter>Header Files\skrive</Filter>
+    </ClInclude>
+    <ClInclude Include="skrive\skrive\writer.h">
+      <Filter>Header Files\skrive</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

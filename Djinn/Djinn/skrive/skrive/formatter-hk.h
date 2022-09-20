@@ -44,4 +44,13 @@ namespace sk {
             writer.write(N, obj, format);
         }
     };
+
+    template<typename T>
+    struct Formatter<T*> {
+        static void format(const T* (&obj), std::string_view fmt, Writer& writer) {
+            auto format = Format::from(fmt);
+            void* p = const_cast<void*>(reinterpret_cast<const void*>(obj));
+            writer.write(p, format);
+        }
+    };
 }
