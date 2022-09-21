@@ -5,6 +5,10 @@
 #include "Interpreter.h"
 #include "Error.h"
 
+// @TODOS:
+// - Handle `\r` in tokenizer.
+//
+
 int main(int argc, const char **argv)
 {
 	sk::println("blah {}", "blooh");

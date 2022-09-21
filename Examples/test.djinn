@@ -1,7 +1,5 @@
 import "core/io"
 
 def main(args: []String) {
-	for arg in args {
-		echo(arg)
-	}
+	echo("Hello, world!")
 }

@@ -130,7 +130,7 @@ namespace sk {
         stream.flags(old_flags);
     }
 
-    void Writer::write(char c, Format fmt) {
+    void Writer::write(char32_t c, Format fmt) {
         auto old_flags = stream.flags();
         stream.clear();
 

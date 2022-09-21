@@ -48,7 +48,7 @@ namespace sk {
 
         void write(bool b, Format fmt = {});
 
-        void write(char c, Format fmt = {});
+        void write(char32_t c, Format fmt = {});
 
         void write(int16_t d, Format fmt = {});
         void write(int32_t d, Format fmt = {});

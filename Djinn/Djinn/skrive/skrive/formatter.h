@@ -20,6 +20,12 @@ namespace sk {
     };
 
     template<>
+    struct Formatter<char32_t>
+    {
+        static void format(const char32_t& obj, std::string_view fmt, Writer& writer);
+    };
+
+    template<>
     struct Formatter<int16_t> {
         static void format(const int16_t& obj, std::string_view fmt, Writer& writer);
     };
