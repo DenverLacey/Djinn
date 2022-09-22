@@ -45,6 +45,8 @@ TokenPrecedence Token::precedence() const
 			break;
 
 		// Delimeters
+		case TokenKind_Newline:      break;
+		case TokenKind_Colon:        prec = TokenPrecedence_Colon; break;
 		case TokenKind_OpenParen:    prec = TokenPrecedence_Call; break;
 		case TokenKind_CloseParen:   break;
 		case TokenKind_OpenBracket:  prec = TokenPrecedence_Call; break;
@@ -117,6 +119,16 @@ void sk::Formatter<TokenKind>::format(const TokenKind& kind, std::string_view fm
 		}
 
 		// Delimeters
+		case TokenKind_Newline:
+		{
+			writer.write("Newline");
+			break;
+		}
+		case TokenKind_Colon:
+		{
+			writer.write("Colon");
+			break;
+		}
 		case TokenKind_OpenParen:
 		{
 			writer.write("OpenParen");
@@ -210,6 +222,11 @@ void sk::Formatter<TokenPrecedence>::format(const TokenPrecedence& prec, std::st
 			writer.write("Assignment");
 			break;
 		}
+		case TokenPrecedence_Colon:
+		{
+			writer.write("Colon");
+			break;
+		}
 		case TokenPrecedence_Term:
 		{
 			writer.write("Term");
@@ -244,7 +261,7 @@ void sk::Formatter<Token>::format(const Token& token, std::string_view fmt, sk::
 		}
 		case TokenKind_Char:
 		{
-			writer.print("Char = {:c}", static_cast<int32_t>(token.char_value));
+			writer.print("Char = '{:c}'", static_cast<int32_t>(token.char_value));
 			if (alternate) writer.write("\n\t");
 			break;
 		}
@@ -262,13 +279,13 @@ void sk::Formatter<Token>::format(const Token& token, std::string_view fmt, sk::
 		}
 		case TokenKind_Str:
 		{
-			writer.print("Str = {}", token.str_value);
+			writer.print("Str = \"{}\"", token.str_value);
 			if (alternate) writer.write("\n\t");
 			break;
 		}
 		case TokenKind_Ident:
 		{
-			writer.print("Ident = {}, ", token.str_value);
+			writer.print("Ident = \"{}\", ", token.str_value);
 			if (alternate) writer.write("\n\t");
 			break;
 		}
@@ -317,6 +334,13 @@ char32_t Tokenizer::peek_char()
 
 	char32_t c = utf8::peek_next(source, source_end);
 
+	if (c == U'\r')
+	{
+		utf8::next(source, source_end); // Skip carraige return
+		c = utf8::peek_next(source, source_end);
+		ENSURE(c == U'\n', "Encountered `\\r` without a following `\\n`");
+	}
+
 	return c;
 }
 
@@ -326,6 +350,11 @@ char32_t Tokenizer::next_char()
 		return U'\0';
 
 	char32_t c = utf8::next(source, source_end);
+	if (c == U'\r')
+	{
+		c = utf8::next(source, source_end);
+		ENSURE(c == U'\n', "Encountered `\\r` without a following `\\n`");
+	}
 
 	if (c == U'\n')
 	{
@@ -454,11 +483,12 @@ void Tokenizer::skip_whitespace()
 			case U'\n':
 			{
 				if (!previous_was_newline)
-					break;
+					return;
 				next_char();
 				break;
 			}
 			case U' ':
+			case U'\t':
 			{
 				next_char();
 				break;
@@ -625,13 +655,19 @@ Token Tokenizer::tokenize_punctuation()
 	Token token = {};
 	token.location = current_location();
 
-	auto c = next_char();
-	switch (next_char())
+	char32_t c = next_char();
+	switch (c)
 	{
 		// Delimeters
 		case U'\n':
 		{
 			PANIC("newline character reached {}.", __func__);
+			break;
+		}
+		case U':':
+		{
+			token.kind = TokenKind_Colon;
+			break;
 		}
 		case U'(':
 		{
@@ -694,6 +730,9 @@ Token Tokenizer::tokenize_punctuation()
 		default:
 		{
 			RAISE(token.location, "Invalid operator `{}`", c);
+			break;
 		}
 	}
+
+	return token;
 }

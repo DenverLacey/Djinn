@@ -11,8 +11,6 @@
 
 int main(int argc, const char **argv)
 {
-	sk::println("blah {}", "blooh");
-
 	if (argc <= 1)
 	{
 		sk::eprintln("ERR: No filepaths given to Djinn compiler.");

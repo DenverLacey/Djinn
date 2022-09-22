@@ -62,12 +62,19 @@ void Interpreter::parse_file(size_t file_index)
 	ENSURE(file_index < loaded_files.size(), "Index `{}` is outside bounds of loaded_files array. size = {}", file_index, loaded_files.size());
 	auto& file = loaded_files[file_index];
 
-	auto tokens = Parser::parse_file(file);
-
-	for (size_t i = 0; i < tokens.size(); i++)
+	try
 	{
-		auto& token = tokens[i];
-		sk::println("[{}] = {:#}", i, token);
+		auto tokens = Parser::parse_file(file);
+
+		for (size_t i = 0; i < tokens.size(); i++)
+		{
+			auto& token = tokens[i];
+			sk::println("[{}] = {:#}", i, token);
+		}
+	}
+	catch (const DjinnException& e)
+	{
+		sk::eprintln("{}", e.what());
 	}
 
 	//auto parsed_file = ParsedFile{ file_index, std::move(ast) };

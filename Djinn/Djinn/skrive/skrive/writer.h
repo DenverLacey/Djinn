@@ -82,7 +82,7 @@ namespace sk {
         void println(const char* fmt, const Ts&... args) {
             if constexpr (sizeof...(Ts) == 0) {
                 write(fmt);
-                write('\n');
+                write("\r\n");
             } else {
                 auto packed = to_args(args...);
                 println(fmt, packed);

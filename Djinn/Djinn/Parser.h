@@ -20,6 +20,7 @@ enum TokenKind
 
 	// Delimeters
 	TokenKind_Newline,
+	TokenKind_Colon,
 	TokenKind_OpenParen,
 	TokenKind_CloseParen,
 	TokenKind_OpenBracket,
@@ -43,6 +44,7 @@ enum TokenPrecedence
 {
 	TokenPrecedence_None = 0,
 	TokenPrecedence_Assignment, // =
+	TokenPrecedence_Colon,
 	TokenPrecedence_Term,       // + -
 	TokenPrecedence_Factor,      // * / % 
 	TokenPrecedence_Unary,      // -

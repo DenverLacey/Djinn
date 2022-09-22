@@ -158,7 +158,14 @@ namespace sk {
                 stream << static_cast<int>(c);
                 break;
             default:
+#if 0
                 stream << c;
+#else
+                // @HACK: This is because the cout/cerr streams don't actually
+                // handle `char32_t` they just print it as a decimal.
+                // (Screw you microsoft!!!)
+                stream << static_cast<char>(c);
+#endif
                 break;
         }
 
@@ -209,24 +216,28 @@ namespace sk {
             case Format::Type::BinaryBig:
                 // @TODO
                 break;
+            case Format::Type::Char:
+                stream << static_cast<char>(d); // @TODO: Actually make this work with UTF32 (Screw microsfot!!!)
+                break;
+            case Format::Type::CharBig:
+                stream << std::uppercase << static_cast<char>(d); // @TODO: Actually make this work with UTF32 (Screw microsfot!!!)
+                break;
             case Format::Type::Decimal:
-                stream << std::dec;
+                stream << std::dec << d;
                 break;
             case Format::Type::Hex:
                 if (fmt.alternate) stream << "0x";
-                stream << std::hex;
+                stream << std::hex << d;
                 break;
             case Format::Type::HexBig:
                 if (fmt.alternate) stream << "0x";
-                stream << std::uppercase << std::hex;
+                stream << std::uppercase << std::hex << d;
                 break;
             case Format::Type::Octal:
                 if (fmt.alternate) stream << "0o";
-                stream << std::oct;
+                stream << std::oct << d;
                 break;
         }
-
-        stream << d;
 
         stream.flags(old_flags);
     }
@@ -450,7 +461,7 @@ namespace sk {
 
     void Writer::println(const char* fmt, const Args& args) {
         print(fmt, args);
-        write('\n');
+        write("\r\n");
     }
 
     void Writer::print(const char* fmt, const Args& args) {
