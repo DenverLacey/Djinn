@@ -101,5 +101,8 @@
     <ClInclude Include="skrive\skrive\writer.h">
       <Filter>Header Files\skrive</Filter>
     </ClInclude>
+    <ClInclude Include="Ast.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

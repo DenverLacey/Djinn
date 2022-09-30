@@ -2,14 +2,53 @@
 
 #include <stdint.h>
 #include <vector>
+#include <string_view>
 
-/* @DOCS
-* 
-*/
+#include "CodeLocation.h"
+
+using IdentIndex  = uint32_t;
+using InfoIndex   = uint32_t;
+using NodeIndex   = uint32_t;
+using ChildOffset = int16_t;
 
 enum AstKind : uint32_t
 {
 	AstKind_None = 0,
+	AstKind_Root = 1,
+
+	// Literals
+	AstKind_Bool,
+	AstKind_Char,
+	AstKind_Int,
+	AstKind_Float,
+	AstKind_Str,
+	AstKind_Ident,
+
+	// Unary
+	AstKind_Negate,
+
+	// Binary
+	AstKind_Add,
+	AstKind_Subtract,
+	AstKind_Multiply,
+	AstKind_Divide,
+	AstKind_Modulus,
+	AstKind_Invoke,
+
+	// Declarations
+	AstKind_ProcDecl,
+};
+
+/* === Node Infos =====================
+* These structs are used to store extra information for complex nodes
+* such as declarations that cannot fit in an ordinary AstNode.
+*/
+
+struct AstNodeInfo_ProcDecl
+{
+	IdentIndex ident;
+	InfoIndex params;
+	InfoIndex body;
 };
 
 // @TEMP
@@ -32,15 +71,15 @@ struct AstNode
 {
 	AstKind kind = AstKind_None;   // This would be a uint32_t behind the scenes.
 	Type type = { Type::Unknown };
-	uint32_t me;                   // This node's index in the Ast.
+	NodeIndex me;                   // This node's index in the Ast.
 	union
 	{
 		struct
 		{
-			int16_t left;   // Relative jump to left child node.
-			int16_t right;  // Relative jump to right child node.
+			ChildOffset left;   // Relative jump to left child node.
+			ChildOffset right;  // Relative jump to right child node.
 		};
-		uint32_t info;      // Index of the extra info for this node.
+		InfoIndex info;      // Index of the extra info for this node.
 	};
 };
 
@@ -48,4 +87,9 @@ struct Ast
 {
 	// === Data =======================
 	std::vector<AstNode> nodes;
+	std::vector<CodeLocation> locations;
+
+	// Node Infos
+	std::vector<std::string_view> idents;
+	std::vector<AstNodeInfo_ProcDecl> proc_decl_infos;
 };

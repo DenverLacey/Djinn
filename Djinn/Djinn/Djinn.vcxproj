@@ -148,6 +148,7 @@
     <ClCompile Include="skrive\skrive\writer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Ast.h" />
     <ClInclude Include="BucketArray.h" />
     <ClInclude Include="CodeLocation.h" />
     <ClInclude Include="Error.h" />
