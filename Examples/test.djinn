@@ -1,4 +1,4 @@
-import "core/io"
+import "std/io"
 
 def main(args: []String) {
 	echo("Hello, world!")

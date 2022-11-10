@@ -35,6 +35,9 @@ enum AstKind : uint32_t
 	AstKind_Modulus,
 	AstKind_Invoke,
 
+	// Statements
+	AstKind_ImprtStmt,
+
 	// Declarations
 	AstKind_ProcDecl,
 };
@@ -79,7 +82,8 @@ struct AstNode
 			ChildOffset left;   // Relative jump to left child node.
 			ChildOffset right;  // Relative jump to right child node.
 		};
-		InfoIndex info;      // Index of the extra info for this node.
+		InfoIndex info;    // Index of the extra info for this node.
+		IdentIndex ident;  // Index of the ident for this node.
 	};
 };
 
@@ -92,4 +96,8 @@ struct Ast
 	// Node Infos
 	std::vector<std::string_view> idents;
 	std::vector<AstNodeInfo_ProcDecl> proc_decl_infos;
+
+	// Associated Functions
+	NodeIndex add_node(AstKind kind, CodeLocation loc);
+	NodeIndex add_ident_node(std::string_view ident, CodeLocation loc);
 };
