@@ -5,26 +5,29 @@
 
 #include <charconv>
 
-std::vector<Token> Parser::parse_file(const LoadedFile& file)
+Ast Parser::parse_file(const LoadedFile& file)
 {
-	std::vector<Token> tokens;
-
-	auto toknizer = Tokenizer{
+ 	auto tokenizer = Tokenizer{
 		file.filepath, // filename
 		file.source.data(), // source
 		file.source.data() + file.source.size(), // source_end
 	};
 
+	auto parser = Parser{ tokenizer };
+
 	for (;;)
 	{
-		auto token = toknizer.next();
-		if (token.kind == TokenKind_None)
+		parser.skip_newline();
+		if (parser.tokenizer.peek().is_none())
+		{
 			break;
+		}
 
-		tokens.push_back(token);
+		auto idx = parser.parse_declaration();
+		parser.ast.roots.push_back(idx);
 	}
 
-	return tokens;
+	return parser.ast;
 }
 
 TokenPrecedence Token::precedence() const
@@ -74,6 +77,11 @@ TokenPrecedence Token::precedence() const
 	}
 
 	return prec;
+}
+
+bool Token::is_none() const
+{
+	return kind == TokenKind_None;
 }
 
 void sk::Formatter<TokenKind>::format(const TokenKind& kind, std::string_view fmt, sk::Writer& writer)
@@ -735,4 +743,184 @@ Token Tokenizer::tokenize_punctuation()
 	}
 
 	return token;
+}
+
+bool Parser::check(TokenKind kind)
+{
+	auto token = tokenizer.peek();
+	return token.kind == kind;
+}
+
+Token Parser::match(TokenKind kind)
+{
+	if (check(kind))
+	{
+		return tokenizer.next();
+	}
+
+	return { TokenKind_None };
+}
+
+Token Parser::expect(TokenKind kind, const char* err)
+{
+	auto token = tokenizer.next();
+	if (token.kind != kind)
+	{
+		RAISE(token.location, err);
+	}
+
+	return token;
+}
+
+void Parser::skip_newline()
+{
+	match(TokenKind_Newline);
+}
+
+bool Parser::skip_check(TokenKind kind)
+{
+	match(TokenKind_Newline);
+	return check(kind);
+}
+
+Token Parser::skip_match(TokenKind kind)
+{
+	match(TokenKind_Newline);
+	return match(kind);
+}
+
+Token Parser::skip_expect(TokenKind kind, const char* err)
+{
+	match(TokenKind_Newline);
+	return expect(kind, err);
+}
+
+NodeIndex Parser::parse_declaration()
+{
+	NodeIndex result;
+	auto token = tokenizer.peek();
+	switch (token.kind)
+	{
+		case TokenKind_Import:
+		{
+			auto token = tokenizer.next();
+			result = parse_import_statement(token);
+			break;
+		}
+		case TokenKind_Def:
+		{
+			TODO("parse function declarations.");
+			break;
+		}
+		default:
+		{
+			result = parse_statement();
+		}
+	}
+
+	match(TokenKind_Newline);
+
+	return result;
+}
+
+NodeIndex Parser::parse_statement()
+{
+	auto token = tokenizer.peek();
+	switch (token.kind)
+	{
+		default:
+		{
+			return parse_expression(false);
+		}
+	}
+}
+
+NodeIndex Parser::parse_expression(bool ban_assignment)
+{
+	auto result = parse_precedence(TokenPrecedence_Assignment);
+
+	if (ban_assignment)
+	{
+		auto result_node = ast.nodes[result];
+		if (result_node.kind == AstKind_Assign)
+		{
+			auto result_loc = ast.locations[result];
+			RAISE(result_loc, "Cannot assign in expression context.");
+		}
+	}
+
+	return result;
+}
+
+NodeIndex Parser::parse_precedence(TokenPrecedence prec)
+{
+	auto token = tokenizer.next();
+	if (token.is_none())
+	{
+		RAISE(token.location, "Unterminated statement.");
+	}
+	
+	auto result = parse_prefix(token);
+
+	while (prec < tokenizer.peek().precedence())
+	{
+		auto token = tokenizer.next();
+		if (token.kind == TokenKind_None)
+		{
+			RAISE(token.location, "Unterminated statement.");
+		}
+
+		result = parse_infix(result, token);
+	}
+
+	return result;
+}
+
+NodeIndex Parser::parse_prefix(Token token)
+{
+	NodeIndex result;
+
+	switch (token.kind)
+	{
+		case TokenKind_Str:
+		{
+			result = ast.add_str_node(token.str_value, token.location);
+			break;
+		}
+		default:
+		{
+			RAISE(token.location, "`{}` is not a prefix operator.", token.kind);
+		}
+	}
+
+	return result;
+}
+
+NodeIndex Parser::parse_infix(NodeIndex previous, Token token)
+{
+	NodeIndex result;
+
+	switch (token.kind)
+	{
+		default:
+		{
+			RAISE(token.location, "`{}` is not an infix operator.", token.kind);
+		}
+	}
+
+	return result;
+}
+
+NodeIndex Parser::parse_import_statement(Token import_token)
+{
+	ENSURE(import_token.kind == TokenKind_Import, "Import statement doesn't start with an import token.");
+
+	auto path_token = tokenizer.peek();
+	if (path_token.kind != TokenKind_Str)
+	{
+		RAISE(path_token.location, "Expected a string literal after `import` keyword.");
+	}
+
+	auto path = parse_expression();
+	return ast.add_node(AstKind_ImportStmt, import_token.location, path);
 }

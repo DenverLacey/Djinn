@@ -1,5 +1,5 @@
 import "std/io"
 
-def main(args: []String) {
-	echo("Hello, world!")
-}
+#def main(args: []String) {
+#	echo("Hello, world!")
+#}

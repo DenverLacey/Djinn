@@ -30,7 +30,7 @@ namespace sk {
             }
 
             if (format.alternate) {
-                writer.write('}');
+                writer.write("}");
             } else {
                 writer.write(" }");
             }

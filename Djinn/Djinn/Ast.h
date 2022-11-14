@@ -6,7 +6,7 @@
 
 #include "CodeLocation.h"
 
-using IdentIndex  = uint32_t;
+using StrIndex    = uint32_t;
 using InfoIndex   = uint32_t;
 using NodeIndex   = uint32_t;
 using ChildOffset = int16_t;
@@ -14,7 +14,6 @@ using ChildOffset = int16_t;
 enum AstKind : uint32_t
 {
 	AstKind_None = 0,
-	AstKind_Root = 1,
 
 	// Literals
 	AstKind_Bool,
@@ -28,6 +27,7 @@ enum AstKind : uint32_t
 	AstKind_Negate,
 
 	// Binary
+	AstKind_Assign,
 	AstKind_Add,
 	AstKind_Subtract,
 	AstKind_Multiply,
@@ -36,7 +36,7 @@ enum AstKind : uint32_t
 	AstKind_Invoke,
 
 	// Statements
-	AstKind_ImprtStmt,
+	AstKind_ImportStmt,
 
 	// Declarations
 	AstKind_ProcDecl,
@@ -47,9 +47,14 @@ enum AstKind : uint32_t
 * such as declarations that cannot fit in an ordinary AstNode.
 */
 
+struct AstNodeInfo_Block
+{
+	std::vector<NodeIndex> nodes;
+};
+
 struct AstNodeInfo_ProcDecl
 {
-	IdentIndex ident;
+	StrIndex ident;
 	InfoIndex params;
 	InfoIndex body;
 };
@@ -82,8 +87,9 @@ struct AstNode
 			ChildOffset left;   // Relative jump to left child node.
 			ChildOffset right;  // Relative jump to right child node.
 		};
-		InfoIndex info;    // Index of the extra info for this node.
-		IdentIndex ident;  // Index of the ident for this node.
+		InfoIndex info;      // Index of the extra info for this node.
+		StrIndex ident;		 // Index of the ident for this node.
+		StrIndex str_value;  // Index of the ident for this node.
 	};
 };
 
@@ -93,11 +99,19 @@ struct Ast
 	std::vector<AstNode> nodes;
 	std::vector<CodeLocation> locations;
 
+	std::vector<NodeIndex> roots;
+
 	// Node Infos
-	std::vector<std::string_view> idents;
+	std::vector<std::string_view> strings;
+	std::vector<AstNodeInfo_Block> block_infos;
 	std::vector<AstNodeInfo_ProcDecl> proc_decl_infos;
 
 	// Associated Functions
-	NodeIndex add_node(AstKind kind, CodeLocation loc);
+	NodeIndex add_node(AstKind kind, CodeLocation loc, NodeIndex left = -1, NodeIndex right = -1);
+	NodeIndex add_node_with_info(AstKind kind, CodeLocation loc, InfoIndex info);
 	NodeIndex add_ident_node(std::string_view ident, CodeLocation loc);
+	NodeIndex add_str_node(std::string_view str, CodeLocation loc);
+
+	void print() const;
+	void print_node(NodeIndex idx) const;
 };

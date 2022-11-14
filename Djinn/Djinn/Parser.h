@@ -5,6 +5,7 @@
 
 #include "CodeLocation.h"
 #include "Interpreter.h"
+#include "Ast.h"
 
 enum TokenKind
 {
@@ -68,6 +69,7 @@ struct Token
 
 	// === Methods ====================
 	TokenPrecedence precedence() const;
+	bool is_none() const;
 };
 
 struct Tokenizer
@@ -110,9 +112,30 @@ struct Tokenizer
 
 struct Parser
 {
+	// === Data =======================
 	Tokenizer tokenizer;
+	Ast ast;
 
-	static std::vector<Token> parse_file(const LoadedFile& file);
+	// === Methods ====================
+	static Ast parse_file(const LoadedFile& file);
+
+	bool check(TokenKind kind);
+	Token match(TokenKind kind);
+	Token expect(TokenKind kind, const char* err);
+
+	void skip_newline();
+	bool skip_check(TokenKind kind);
+	Token skip_match(TokenKind kind);
+	Token skip_expect(TokenKind kind, const char* err);
+
+	NodeIndex parse_declaration();
+	NodeIndex parse_statement();
+	NodeIndex parse_expression(bool ban_assignment = true);
+	NodeIndex parse_precedence(TokenPrecedence prec);
+	NodeIndex parse_prefix(Token token);
+	NodeIndex parse_infix(NodeIndex previous, Token token);
+
+	NodeIndex parse_import_statement(Token import_token);
 };
 
 namespace sk

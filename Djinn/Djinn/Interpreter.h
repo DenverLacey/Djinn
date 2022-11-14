@@ -2,6 +2,7 @@
 
 #include "BucketArray.h"
 #include "Scope.h"
+#include "Ast.h"
 
 #include <vector>
 
@@ -16,7 +17,7 @@ struct LoadedFile
 struct ParsedFile
 {
 	size_t file_index;
-	std::vector<void*> ast;
+	Ast ast;
 };
 
 using Pid = size_t;

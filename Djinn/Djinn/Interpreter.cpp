@@ -64,19 +64,14 @@ void Interpreter::parse_file(size_t file_index)
 
 	try
 	{
-		auto tokens = Parser::parse_file(file);
+		auto ast = Parser::parse_file(file);
+		ast.print();
 
-		for (size_t i = 0; i < tokens.size(); i++)
-		{
-			auto& token = tokens[i];
-			sk::println("[{}] = {:#}", i, token);
-		}
+		auto parsed_file = ParsedFile{ file_index, std::move(ast) };
+		parsed_files.push_back(std::move(parsed_file));
 	}
 	catch (const DjinnException& e)
 	{
 		sk::eprintln("{}", e.what());
 	}
-
-	//auto parsed_file = ParsedFile{ file_index, std::move(ast) };
-	//parsed_files.push_back(std::move(parsed_file));
 }
