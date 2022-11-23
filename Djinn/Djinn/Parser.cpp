@@ -137,6 +137,11 @@ void sk::Formatter<TokenKind>::format(const TokenKind& kind, std::string_view fm
 			writer.write("Colon");
 			break;
 		}
+		case TokenKind_Comma:
+		{
+			writer.write("Comma");
+			break;
+		}
 		case TokenKind_OpenParen:
 		{
 			writer.write("OpenParen");
@@ -408,7 +413,7 @@ Token Tokenizer::peek(size_t n)
 	while (peeked_tokens.size() <= n)
 	{
 		auto token = next_no_peeking();
-		if (token.kind == TokenKind_None)
+		if (token.is_none())
 			return token;
 
 		peeked_tokens.push_back(token);
@@ -779,19 +784,19 @@ void Parser::skip_newline()
 
 bool Parser::skip_check(TokenKind kind)
 {
-	match(TokenKind_Newline);
+	skip_newline();
 	return check(kind);
 }
 
 Token Parser::skip_match(TokenKind kind)
 {
-	match(TokenKind_Newline);
+	skip_newline();
 	return match(kind);
 }
 
 Token Parser::skip_expect(TokenKind kind, const char* err)
 {
-	match(TokenKind_Newline);
+	skip_newline();
 	return expect(kind, err);
 }
 
@@ -809,7 +814,8 @@ NodeIndex Parser::parse_declaration()
 		}
 		case TokenKind_Def:
 		{
-			TODO("parse function declarations.");
+			auto token = tokenizer.next();
+			result = parse_function_declaration(token);
 			break;
 		}
 		default:
@@ -818,7 +824,7 @@ NodeIndex Parser::parse_declaration()
 		}
 	}
 
-	match(TokenKind_Newline);
+	skip_newline();
 
 	return result;
 }
@@ -865,7 +871,7 @@ NodeIndex Parser::parse_precedence(TokenPrecedence prec)
 	while (prec < tokenizer.peek().precedence())
 	{
 		auto token = tokenizer.next();
-		if (token.kind == TokenKind_None)
+		if (token.is_none())
 		{
 			RAISE(token.location, "Unterminated statement.");
 		}
@@ -887,6 +893,16 @@ NodeIndex Parser::parse_prefix(Token token)
 			result = ast.add_str_node(token.str_value, token.location);
 			break;
 		}
+		case TokenKind_Ident:
+		{
+			result = ast.add_ident_node(token.str_value, token.location);
+			break;
+		}
+		case TokenKind_Dash:
+		{
+			result = parse_unary(AstKind_Negate, token.location);
+			break;
+		}
 		default:
 		{
 			RAISE(token.location, "`{}` is not a prefix operator.", token.kind);
@@ -899,9 +915,52 @@ NodeIndex Parser::parse_prefix(Token token)
 NodeIndex Parser::parse_infix(NodeIndex previous, Token token)
 {
 	NodeIndex result;
+	auto prec = token.precedence();
 
 	switch (token.kind)
 	{
+		case TokenKind_Colon:
+		{
+			result = parse_binary(AstKind_Binding, token.location, previous, prec);
+			break;
+		}
+		case TokenKind_OpenParen:
+		{
+			result = parse_binary(AstKind_Invoke, token.location, previous, prec);
+			skip_expect(TokenKind_CloseParen, "Expected `)` to terminate argument list of invocation.");
+			break;
+		}
+		case TokenKind_OpenBracket:
+		{
+			result = parse_binary(AstKind_Subscript, token.location, previous, prec);
+			skip_expect(TokenKind_CloseBracket, "Expected `]` to terminate subscript.");
+			break;
+		}
+		case TokenKind_Plus:
+		{
+			result = parse_binary(AstKind_Add, token.location, previous, prec);
+			break;
+		}
+		case TokenKind_Dash:
+		{
+			result = parse_binary(AstKind_Subtract, token.location, previous, prec);
+			break;
+		}
+		case TokenKind_Star:
+		{
+			result = parse_binary(AstKind_Multiply, token.location, previous, prec);
+			break;
+		}
+		case TokenKind_Slash:
+		{
+			result = parse_binary(AstKind_Divide, token.location, previous, prec);
+			break;
+		}
+		case TokenKind_Percent:
+		{
+			result = parse_binary(AstKind_Modulus, token.location, previous, prec);
+			break;
+		}
 		default:
 		{
 			RAISE(token.location, "`{}` is not an infix operator.", token.kind);
@@ -909,6 +968,64 @@ NodeIndex Parser::parse_infix(NodeIndex previous, Token token)
 	}
 
 	return result;
+}
+
+NodeIndex Parser::parse_unary(AstKind kind, CodeLocation location)
+{
+	skip_newline();
+	auto sub = parse_precedence(TokenPrecedence_Unary);
+	return ast.add_node(kind, location, sub);
+}
+
+NodeIndex Parser::parse_binary(AstKind kind, CodeLocation location, NodeIndex lhs, TokenPrecedence prec)
+{
+	skip_newline();
+	auto rhs = parse_precedence(prec);
+	return ast.add_node(kind, location, lhs, rhs);
+}
+
+NodeIndex Parser::parse_identifier(const char* err)
+{
+	auto token = skip_expect(TokenKind_Ident, err);
+	return ast.add_ident_node(token.str_value, token.location);
+}
+
+NodeIndex Parser::parse_block()
+{
+	AstNodeInfo_Block block;
+
+	auto token = skip_expect(TokenKind_OpenCurly, "Expected `{{` to begin block.");
+
+	while (!skip_check(TokenKind_CloseCurly) && !check(TokenKind_None))
+	{
+		auto node = parse_declaration();
+		block.nodes.push_back(node);
+	}
+
+	expect(TokenKind_CloseCurly, "Expected `}}` to terminate block.");
+
+	auto block_idx = ast.block_infos.size();
+	ast.block_infos.push_back(block);
+
+	return ast.add_node_with_info(AstKind_Block, token.location, block_idx);
+}
+
+NodeIndex Parser::parse_comma_separated_expressions(AstKind kind, TokenKind terminator, CodeLocation location)
+{
+	AstNodeInfo_Block exprs;
+
+	do
+	{
+		if (skip_check(terminator) || check(TokenKind_None))
+			break;
+		auto expr = parse_expression();
+		exprs.nodes.push_back(expr);
+	} while (!match(TokenKind_Comma).is_none());
+
+	auto params_idx = ast.block_infos.size();
+	ast.block_infos.push_back(exprs);
+
+	return ast.add_node_with_info(kind, location, params_idx);
 }
 
 NodeIndex Parser::parse_import_statement(Token import_token)
@@ -923,4 +1040,27 @@ NodeIndex Parser::parse_import_statement(Token import_token)
 
 	auto path = parse_expression();
 	return ast.add_node(AstKind_ImportStmt, import_token.location, path);
+}
+
+NodeIndex Parser::parse_function_declaration(Token def_token)
+{
+	ENSURE(def_token.kind == TokenKind_Def, "Function declaration doesn't start with a def token.");
+
+	auto ident = parse_identifier("Expected an identifier after `def` keyword.");
+
+	auto param_tok = skip_expect(TokenKind_OpenParen, "Expected `(` to begin function parameter list.");
+	auto params = parse_comma_separated_expressions(AstKind_Params, TokenKind_CloseParen, param_tok.location);
+	expect(TokenKind_CloseParen, "Expected `)` to termiate function parameter list.");
+
+	auto body = parse_block();
+
+	auto info = AstNodeInfo_ProcDecl{
+		ident,
+		params,
+		body
+	};
+	InfoIndex info_idx = ast.proc_decl_infos.size();
+	ast.proc_decl_infos.push_back(info);
+
+	return ast.add_node_with_info(AstKind_ProcDecl, def_token.location, info_idx);
 }

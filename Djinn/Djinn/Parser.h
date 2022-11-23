@@ -22,6 +22,7 @@ enum TokenKind
 	// Delimeters
 	TokenKind_Newline,
 	TokenKind_Colon,
+	TokenKind_Comma,
 	TokenKind_OpenParen,
 	TokenKind_CloseParen,
 	TokenKind_OpenBracket,
@@ -135,7 +136,15 @@ struct Parser
 	NodeIndex parse_prefix(Token token);
 	NodeIndex parse_infix(NodeIndex previous, Token token);
 
+	NodeIndex parse_unary(AstKind kind, CodeLocation location);
+	NodeIndex parse_binary(AstKind kind, CodeLocation location, NodeIndex lhs, TokenPrecedence prec);
+
+	NodeIndex parse_identifier(const char* err);
+	NodeIndex parse_block();
+	NodeIndex parse_comma_separated_expressions(AstKind kind, TokenKind terminator, CodeLocation location);
+
 	NodeIndex parse_import_statement(Token import_token);
+	NodeIndex parse_function_declaration(Token def_token);
 };
 
 namespace sk

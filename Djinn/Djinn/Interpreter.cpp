@@ -65,6 +65,8 @@ void Interpreter::parse_file(size_t file_index)
 	try
 	{
 		auto ast = Parser::parse_file(file);
+
+		sk::println("[INFO] Generated Ast:");
 		ast.print();
 
 		auto parsed_file = ParsedFile{ file_index, std::move(ast) };

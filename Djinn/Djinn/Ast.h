@@ -34,12 +34,20 @@ enum AstKind : uint32_t
 	AstKind_Divide,
 	AstKind_Modulus,
 	AstKind_Invoke,
+	AstKind_Subscript,
+	AstKind_Binding,
+
+	// Blocks
+	AstKind_Block,
 
 	// Statements
 	AstKind_ImportStmt,
 
 	// Declarations
 	AstKind_ProcDecl,
+
+	// Other
+	AstKind_Params,
 };
 
 /* === Node Infos =====================
@@ -54,9 +62,9 @@ struct AstNodeInfo_Block
 
 struct AstNodeInfo_ProcDecl
 {
-	StrIndex ident;
-	InfoIndex params;
-	InfoIndex body;
+	NodeIndex ident;
+	NodeIndex params;
+	NodeIndex body;
 };
 
 // @TEMP
@@ -89,7 +97,7 @@ struct AstNode
 		};
 		InfoIndex info;      // Index of the extra info for this node.
 		StrIndex ident;		 // Index of the ident for this node.
-		StrIndex str_value;  // Index of the ident for this node.
+		StrIndex str;        // Index of the ident for this node.
 	};
 };
 
@@ -113,5 +121,5 @@ struct Ast
 	NodeIndex add_str_node(std::string_view str, CodeLocation loc);
 
 	void print() const;
-	void print_node(NodeIndex idx) const;
+	void print_node(NodeIndex idx, size_t indent) const;
 };
